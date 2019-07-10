@@ -1,0 +1,15 @@
+resource {{resource_name}} {
+
+    device {{device_name}};
+    disk /dev/{{volume_group_name}}/{{logical_volume_name}};
+    protocol C;
+    meta-disk internal;
+
+
+{% for server in groups['servers'] %}
+    on {{server["hostname]}} {
+        address {{server}}:7790;
+    }
+{% endfor %}
+
+}

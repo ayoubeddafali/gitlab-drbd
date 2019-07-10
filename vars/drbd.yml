@@ -1,0 +1,7 @@
+disk_name: /dev/sda
+volume_group_name: vg-drbd
+volume_size: 49g
+logical_volume_name: lv-drbd
+resource_name: drbd1
+device_name: /dev/drbd1
+mount_point: /var/opt/gitlab

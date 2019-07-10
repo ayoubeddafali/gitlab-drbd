@@ -1,0 +1,76 @@
+- hosts: servers
+  remote_user: root 
+  vars_files:
+    - vars/drbd.yml
+
+  tasks: 
+    - name: Import Signing Key 
+      rpm_key:
+        state: present
+        key: http://apt.sw.be/RPM-GPG-KEY.dag.txt
+
+    - name: Install elrepo Repository 
+      shell: "rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm"
+
+    - name: Install the required packages for DRBD
+      yum:
+        name:
+          - kmod-drbd84
+          - drbd84-utils
+          - lvm2
+        state: present
+
+    - name: Load the DRBD kernel module
+      shell: "modprobe drbd"
+
+    - name: Start DRBD Service 
+      service:
+        name: drbd
+        state: started
+
+    - name: Enable DRBD Service 
+      service:
+        name: drbd
+        enabled: yes
+
+    - name: Add drbd conf file 
+      shell: "echo drbd > /etc/modules-load.d/drbd.conf"
+    
+    - name: Create Physical Volume
+      shell: "pvcreate ${disk_name}" 
+
+    - name: Create Volume Group 
+      shell:  "sudo vgcreate {{volume_group_name}} {{disk_name}}"
+
+    - name: Create Logical Volume
+      shell: "lvcreate -L {{volume_size}} -n {{logical_volume_name}} {{volume_group_name}}"
+
+    - name: Set DRBD Resource Configuration
+      template:
+        src: templates/drbd1.res.j2
+        dest: /etc/drbd.d/drbd1.res
+
+    - name: Create device metadata for {{resource_name}}
+      shell: "drbdadm create-md drbd1"
+
+    - name: Start up DRBD Device
+      shell: "drbdadm up {{resource_name}}"
+
+- hosts: "{{groups['servers'][0]}}"
+  remote_user: root 
+  vars_files:
+    - vars/drbd.yml
+  tasks: 
+    - name: Set DRBD device to primary on {{groups['servers'][0]}}
+      shell: "drbdadm primary --force {{resource_name}}"
+
+    - name: Create ext4 Filesystem 
+      shell: "mkfs.xfs {{device_name}}"
+
+    - name: Create mount point {{mount_point}}
+      file:
+        path: "{{mount_point}}"
+        state: directory
+
+    - name: Mount device 
+      shell: "mount {{device_name}} {{mount_point}}"
