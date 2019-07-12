@@ -4,40 +4,13 @@
     - vars/drbd.yml
 
   tasks: 
-    - name: Import Signing Key 
-      rpm_key:
-        state: present
-        key: http://apt.sw.be/RPM-GPG-KEY.dag.txt
 
-    - name: Install elrepo Repository 
-      shell: "rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm"
-
-    - name: Install the required packages for DRBD
-      yum:
-        name:
-          - kmod-drbd84
-          - drbd84-utils
-          - lvm2
-        state: present
-
-    - name: Load the DRBD kernel module
-      shell: "modprobe drbd"
-
-    - name: Start DRBD Service 
-      service:
-        name: drbd
-        state: started
-
-    - name: Enable DRBD Service 
-      service:
-        name: drbd
-        enabled: yes
 
     - name: Add drbd conf file 
       shell: "echo drbd > /etc/modules-load.d/drbd.conf"
     
     - name: Create Physical Volume
-      shell: "pvcreate ${disk_name}" 
+      shell: "pvcreate {{disk_name}}" 
 
     - name: Create Volume Group 
       shell:  "sudo vgcreate {{volume_group_name}} {{disk_name}}"

@@ -7,7 +7,7 @@ resource {{resource_name}} {
 
 
 {% for server in groups['servers'] %}
-    on {{server["hostname]}} {
+    on {{ hostvars[groups['servers'][loop.index - 1]].hostname}} {
         address {{server}}:7790;
     }
 {% endfor %}

@@ -1,5 +1,6 @@
 - hosts: servers
+  remote_user: root
   vars_files:
-    - vars/main.yml
+    - vars/gitlab.yml
   roles:
     - { role: geerlingguy.gitlab }
